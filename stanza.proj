@@ -4,3 +4,4 @@ include? ".slm/stanza.proj"  ; Dependencies
 pkg-cache: ".slm/pkg-cache"
 
 packages debug/* defined-in "src/"
+packages debug/test-points/* defined-in "src/test-points/"

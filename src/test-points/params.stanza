@@ -1,0 +1,15 @@
+defpackage debug/test-points/params :
+  import core
+  import jitx/shapes
+
+public defstruct TestPointPkgParams :
+  shape:Shape
+
+public defn TestPointPkgParams () :
+  TestPointPkgParams(Circle(1.0))
+
+public defstruct TestPointSymbolParams :
+  reference-designator:String
+
+public defn TestPointSymbolParams () :
+  TestPointSymbolParams(">REF")

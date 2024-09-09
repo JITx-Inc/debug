@@ -1,0 +1,60 @@
+#use-added-syntax(jitx)
+defpackage debug/test-points/test-points :
+  import core
+
+  import jitx
+  import jitx/commands
+
+  import jsl/landpatterns/pads
+  import jsl/errors
+
+  import debug/test-points/symbol
+  import debug/test-points/params
+
+doc: \<DOC>
+makes test points
+TODO: parameterize
+<DOC>
+public defn make-test-points (
+    obj:JITXObject, 
+    pkg-params:TestPointPkgParams = TestPointPkgParams(), 
+    symbol-params:TestPointSymbolParams = TestPointSymbolParams()) 
+    -> Tuple<Instance> :
+  match(obj) :
+    (obj:Pin) :
+      to-tuple $ for p in pins(obj) seq :
+        make-test-point(p, pkg-params, symbol-params)
+    (obj:Net) :
+      ; [TODO] should single-pin-nets(x) = x when x is a single-pin net?
+      ; right now the semantics are for strict containment
+      match(port-type(obj)) :
+        (t:SinglePin) :
+          [make-test-point(obj, pkg-params, symbol-params)]
+        (otherwise) :
+          to-tuple $ for n in single-pin-nets(obj) seq :
+            make-test-point(n, pkg-params, symbol-params)
+    (obj) : throw(ArgumentError("Can only call make-test-points with a pin or net; given %_" % [obj]))
+
+defn make-test-point (pin:JITXObject, pkg-params, symbol-params) -> Instance :
+  inside pcb-module :
+    inst tp : TestPoint(pkg-params, symbol-params)
+    net (tp.p, pin)
+    tp
+
+defn TestPoint (pkg-params:TestPointPkgParams, symbol-params:TestPointSymbolParams) :
+  pcb-component comp :
+    port p
+
+    ; Schematic symbol
+    val sym = testpoint-sym(symbol-params)
+    symbol = sym(p => sym.p)
+
+    ; Make landpattern
+    val pkg = testpoint-pkg(pkg-params)
+    landpattern = pkg(p => pkg.p)
+  comp
+
+defn testpoint-pkg (params:TestPointPkgParams) :
+  pcb-landpattern lp :
+    pad p : testpoint-pad(shape(params)) at loc(0.0, 0.0)
+  lp

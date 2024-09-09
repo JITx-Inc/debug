@@ -82,17 +82,19 @@ pcb-module test-design:
   inst U1 : QuadAND
   place(U1) at loc(0.0, 0.0) on Top
 
-
-  make-test-points(U1.rail, radius = 1.0)
-
   require G1:gate(2) from U1
   require G2:gate(2) from U1
   require G3:gate(2) from U1
   require G4:gate(2) from U1
 
-  net (G1.out, G2.in[1])
-  net (G3.out, G2.in[2])
-  net (G4.out, G3.in[1], G1.in[2])
+  net n1 (G1.out, G2.in[1])
+  net n2 (G3.out, G2.in[2])
+  net n3 (G4.out, G3.in[1], G1.in[2])
+  make-test-points(n1)
+
+  port pwr : power
+  net power (pwr, U1.rail)
+  make-test-points(power)
 
 val board-shape = RoundedRectangle(50.0, 50.0, 0.25)
 

@@ -1,5 +1,5 @@
 #use-added-syntax(jitx)
-defpackage debug/test-point-symbol :
+defpackage debug/test-points/symbol :
   import core
   import collections
   import math
@@ -7,14 +7,17 @@ defpackage debug/test-point-symbol :
   import jitx
   import jitx/commands
 
-; [TODO] : parameterize use jsl
-public pcb-symbol testpoint-sym (ref:String|False) :
-  pin p at unit-point(1.0, 0.0)
+  import debug/test-points/params
 
-  unit-circle([-0.5, 0.0], 0.25)
-  unit-line(0.1, [[-0.25, 0.0], [1.0, 0.0]])
+public defn testpoint-sym (params:TestPointSymbolParams) :
+  pcb-symbol sym :
+    pin p at unit-point(1.0, 0.0)
 
-  unit-ref([-1.0, 0.75])
+    unit-circle([-0.5, 0.0], 0.25)
+    unit-line(0.1, [[-0.25, 0.0], [1.0, 0.0]])
+
+    unit-ref([-1.0, 0.75])
+  sym
 
 ; [TODO] : delete all this shit below
 
