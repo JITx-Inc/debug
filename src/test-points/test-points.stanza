@@ -92,6 +92,7 @@ defn instantiate-test-point (pin:JITXObject, component:Instantiable, ref:String|
   inside pcb-module :
     inst tp : component
     net (tp.p, pin)
+    ; TODO : custom names
     match(ref:String) :
       reference-designator(tp) = ref
     else :
