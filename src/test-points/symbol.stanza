@@ -1,8 +1,6 @@
 #use-added-syntax(jitx)
 defpackage debug/test-points/symbol :
   import core
-  import collections
-  import math
 
   import jitx
   import jitx/commands
@@ -15,40 +13,48 @@ doc: \<DOC>
 TestPointSymbolParams: parameters of the test point schematic symbol
 <DOC>
 public defstruct TestPointSymbolParams :
-  shape:Shape
+  shape:Shape&Centerable
   pin-length:Double
-  ref-location:Point
-  ref:String
   line-width:Double with:
     default => 0.05
     ensure => ensure-positive!
+  label-side:Dir|False with:
+    default => Right
+  label-margin:Double with:
+    default => 1.0
 
 doc: \<DOC>
 Default constructor
 <DOC>
 public defn TestPointSymbolParams () :
   TestPointSymbolParams(
-    Circle(1.0)
+    Circle(0.25)
     0.5
-    Point(0.0,0.0)
-    ">REF"
   )
-
 
 deftype TestPointSym <: SymbolDefn
 public defn testpoint-sym (params:TestPointSymbolParams) -> SchematicSymbol :
   create-symbol(TestPointSym(params))
 
 defn TestPointSym (params:TestPointSymbolParams) -> TestPointSym :
+  val y-offset = pin-length(params) + lower-extend(shape(params))
+  val shift-up = Pose(Point(0.0, y-offset), 0.0, false)
   new TestPointSym :
     defmethod name (this) -> String : "TestPoint"
     defmethod build-pins (this, sn:SymbolNode) :
-      add-pin(sn, Ref(`p), [0.0 0.0], name = "pin-1")
+      add-pin(sn, Ref(`p), Point(0.0, 0.0), name = "pin-1")
     defmethod build-artwork (this, sn:SymbolNode) :
-      ; [TODO] : parameterize
-      circle(sn, 0.25, [0.0 1.0])
-      line(sn, [[0.0, 0.0] [0.0 0.75]])
+      add-glyph(sn, shift-up * shape(params))
+      line(sn, [[0.0, 0.0] [0.0, pin-length(params)]])
     defmethod build-params (this, sn:SymbolNode) :
-      ; [TODO] : parameterize
       val overall = glyph-bounds(sn)
-      text(sn, [right(overall) + 0.5, 0.5], ref(params), anchor = W, font-size = 8)
+      val lpos =
+        match(label-side(params)) :
+          (d:Dir) : switch(d) :
+            Left  : [left(overall) - label-margin(params), y(center(overall))]
+            Right : [right(overall) + label-margin(params), y(center(overall))]
+            Up    : [x(center(overall)), down(overall) - label-margin(params)]
+            Down  : [x(center(overall)), up(overall) + label-margin(params)]
+          (otherwise) : ; place in center of shape
+            shift-up * center(shape(params))
+      add-ref-label(sn, lpos)

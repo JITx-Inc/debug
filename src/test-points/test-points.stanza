@@ -9,52 +9,68 @@ defpackage debug/test-points/test-points :
 
   import debug/test-points/symbol
   import debug/test-points/landpattern
-doc: \<DOC>
-makes test points
-<DOC>
-public defn make-test-points (
-    obj:JITXObject, 
-    tp:Instantiable)
-    -> Tuple<Instance> :
-  make-test-point-per-pin(obj, tp)
- 
-doc: \<DOC>
-makes test points
-TODO: parameterize
-<DOC>
-public defn make-test-points (
-    obj:JITXObject, 
-    pkg-params:TestPointPkgParams = TestPointPkgParams(), 
-    symbol-params:TestPointSymbolParams = TestPointSymbolParams()) 
-    -> Tuple<Instance> :
-  make-test-point-per-pin(obj, TestPoint(pkg-params, symbol-params))
 
-defn make-test-point-per-pin (target:JITXObject, point:Instantiable) -> Tuple<Instance> :
+val ID-COUNTER = to-seq(0 to false)
+
+doc: \<DOC>
+makes test points
+[TODO] : docs
+<DOC>
+public defn make-test-points (
+    obj:JITXObject,
+    tp:Instantiable
+    -- reference-prefix:String = "TP")
+    -> Tuple<Instance> :
+  make-test-point-per-pin(obj, tp, false, reference-prefix)
+
+doc: \<DOC>
+makes test points
+[TODO] : parameterize
+[TODO] : docs
+<DOC>
+public defn make-test-points (
+    obj:JITXObject,
+    pkg-params:TestPointPkgParams = TestPointPkgParams(),
+    symbol-params:TestPointSymbolParams = TestPointSymbolParams(),
+    -- reference-prefix:String = "TP")
+    -> Tuple<Instance> :
+  make-test-point-per-pin(obj, TestPoint(pkg-params, symbol-params), false, reference-prefix)
+
+; Traverse port/net structure, attach one test point to each
+; single-pin port or net
+defn make-test-point-per-pin (
+    target:JITXObject,
+    point:Instantiable,
+    name:String|False,
+    reference-prefix:String)
+    -> Tuple<Instance> :
   match(target) :
     (obj:Pin) :
-      to-tuple $ for p in pins(obj) seq : instantiate-test-point(p, point)
+      to-tuple $ for p in pins(obj) seq : instantiate-test-point(p, point, name, reference-prefix)
     (obj:Net) :
-      ; [TODO] should single-pin-nets(x) = x when x is a single-pin net?
-      ; right now the semantics are for strict containment
       match(port-type(obj)) :
-        (t:SinglePin) : [instantiate-test-point(obj, point)]
+        (t:SinglePin) : [instantiate-test-point(obj, point, name, reference-prefix)]
         (otherwise) :
-          to-tuple $ for n in single-pin-nets(obj) seq : instantiate-test-point(n, point)
+          to-tuple $ for n in single-pin-nets(obj) seq : instantiate-test-point(n, point, name, reference-prefix)
     (obj) : throw(ArgumentError("Can only call make-test-points with a pin or net; given %_" % [obj]))
 
-
-defn instantiate-test-point (pin:JITXObject, component:Instantiable) -> Instance :
+defn instantiate-test-point (pin:JITXObject, component:Instantiable, ref:String|False, prefix) -> Instance :
   inside pcb-module :
-    inst tp : component 
+    inst tp : component
     net (tp.p, pin)
+    match(ref:String) :
+      reference-designator(tp) = ref
+    else :
+      reference-designator(tp) = to-string("%_%_" % [prefix, next(ID-COUNTER)])
     tp
 
+; Parameterizable instantiable
 defn TestPoint (pkg-params:TestPointPkgParams, symbol-params:TestPointSymbolParams) -> Instantiable :
   pcb-component comp :
 
     pin-properties:
       [pin:Ref | pads:Ref ...]
-      [p       | p ]
+      [p       | p           ]
 
     ; Schematic symbol
     assign-symbol(testpoint-sym(symbol-params))
@@ -62,5 +78,3 @@ defn TestPoint (pkg-params:TestPointPkgParams, symbol-params:TestPointSymbolPara
     ; Assign landpattern
     assign-landpattern(testpoint-pkg(pkg-params))
   comp
-
-
