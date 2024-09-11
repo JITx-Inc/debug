@@ -14,6 +14,7 @@ defpackage debug/test-points/test-points :
 doc: \<DOC>
 makes test points
 TODO: parameterize
+TODO: Instantiable
 <DOC>
 public defn make-test-points (
     obj:JITXObject, 
@@ -46,8 +47,7 @@ defn TestPoint (pkg-params:TestPointPkgParams, symbol-params:TestPointSymbolPara
     port p
 
     ; Schematic symbol
-    val sym = testpoint-sym(symbol-params)
-    symbol = sym(p => sym.p)
+    assign-symbol(testpoint-sym(symbol-params))
 
     ; Make landpattern
     val pkg = testpoint-pkg(pkg-params)
