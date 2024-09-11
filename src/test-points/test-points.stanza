@@ -9,39 +9,47 @@ defpackage debug/test-points/test-points :
 
   import debug/test-points/symbol
   import debug/test-points/landpattern
-
+doc: \<DOC>
+makes test points
+<DOC>
+public defn make-test-points (
+    obj:JITXObject, 
+    tp:Instantiable)
+    -> Tuple<Instance> :
+  make-test-point-per-pin(obj, tp)
+ 
 doc: \<DOC>
 makes test points
 TODO: parameterize
-TODO: Instantiable
 <DOC>
 public defn make-test-points (
     obj:JITXObject, 
     pkg-params:TestPointPkgParams = TestPointPkgParams(), 
     symbol-params:TestPointSymbolParams = TestPointSymbolParams()) 
     -> Tuple<Instance> :
-  match(obj) :
+  make-test-point-per-pin(obj, TestPoint(pkg-params, symbol-params))
+
+defn make-test-point-per-pin (target:JITXObject, point:Instantiable) -> Tuple<Instance> :
+  match(target) :
     (obj:Pin) :
-      to-tuple $ for p in pins(obj) seq :
-        make-test-point(p, pkg-params, symbol-params)
+      to-tuple $ for p in pins(obj) seq : instantiate-test-point(p, point)
     (obj:Net) :
       ; [TODO] should single-pin-nets(x) = x when x is a single-pin net?
       ; right now the semantics are for strict containment
       match(port-type(obj)) :
-        (t:SinglePin) :
-          [make-test-point(obj, pkg-params, symbol-params)]
+        (t:SinglePin) : [instantiate-test-point(obj, point)]
         (otherwise) :
-          to-tuple $ for n in single-pin-nets(obj) seq :
-            make-test-point(n, pkg-params, symbol-params)
+          to-tuple $ for n in single-pin-nets(obj) seq : instantiate-test-point(n, point)
     (obj) : throw(ArgumentError("Can only call make-test-points with a pin or net; given %_" % [obj]))
 
-defn make-test-point (pin:JITXObject, pkg-params, symbol-params) -> Instance :
+
+defn instantiate-test-point (pin:JITXObject, component:Instantiable) -> Instance :
   inside pcb-module :
-    inst tp : TestPoint(pkg-params, symbol-params)
+    inst tp : component 
     net (tp.p, pin)
     tp
 
-defn TestPoint (pkg-params:TestPointPkgParams, symbol-params:TestPointSymbolParams) :
+defn TestPoint (pkg-params:TestPointPkgParams, symbol-params:TestPointSymbolParams) -> Instantiable :
   pcb-component comp :
 
     pin-properties:
