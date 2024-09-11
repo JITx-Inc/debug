@@ -1,0 +1,25 @@
+#use-added-syntax(jitx)
+defpackage debug/test-points/landpattern :
+  import core
+  import jitx
+  import jitx/shapes
+
+  import jsl/landpatterns/pads
+
+doc: \<DOC>
+TestPointPkgParams: parameters of the test point package
+<DOC>
+public defstruct TestPointPkgParams :
+  shape:Shape
+
+doc: \<DOC>
+Default constructor
+<DOC>
+public defn TestPointPkgParams () :
+  TestPointPkgParams(Circle(1.0))
+
+; [TODO] : use jsl, generalize
+public defn testpoint-pkg (params:TestPointPkgParams) :
+  pcb-landpattern lp :
+    pad p : testpoint-pad(shape(params)) at loc(0.0, 0.0)
+  lp

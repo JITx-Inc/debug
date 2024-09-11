@@ -1,3 +1,4 @@
 defpackage debug/test-points :
   forward debug/test-points/test-points
-  forward debug/test-points/params
+  forward debug/test-points/landpattern
+  forward debug/test-points/symbol

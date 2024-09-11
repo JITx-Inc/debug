@@ -7,10 +7,32 @@ defpackage debug/test-points/symbol :
   import jitx
   import jitx/commands
 
+  import jsl/ensure
   import jsl/symbols/framework
   import jsl/geometry/box
 
-  import debug/test-points/params
+doc: \<DOC>
+TestPointSymbolParams: parameters of the test point schematic symbol
+<DOC>
+public defstruct TestPointSymbolParams :
+  shape:Shape
+  pin-length:Double
+  ref-location:Point
+  ref:String
+  line-width:Double with:
+    default => 0.05
+    ensure => ensure-positive!
+
+doc: \<DOC>
+Default constructor
+<DOC>
+public defn TestPointSymbolParams () :
+  TestPointSymbolParams(
+    Circle(1.0)
+    0.5
+    Point(0.0,0.0)
+    ">REF"
+  )
 
 
 deftype TestPointSym <: SymbolDefn

@@ -5,11 +5,10 @@ defpackage debug/test-points/test-points :
   import jitx
   import jitx/commands
 
-  import jsl/landpatterns/pads
   import jsl/errors
 
   import debug/test-points/symbol
-  import debug/test-points/params
+  import debug/test-points/landpattern
 
 doc: \<DOC>
 makes test points
@@ -44,17 +43,16 @@ defn make-test-point (pin:JITXObject, pkg-params, symbol-params) -> Instance :
 
 defn TestPoint (pkg-params:TestPointPkgParams, symbol-params:TestPointSymbolParams) :
   pcb-component comp :
-    port p
+
+    pin-properties:
+      [pin:Ref | pads:Ref ...]
+      [p       | p ]
 
     ; Schematic symbol
     assign-symbol(testpoint-sym(symbol-params))
 
-    ; Make landpattern
-    val pkg = testpoint-pkg(pkg-params)
-    landpattern = pkg(p => pkg.p)
+    ; Assign landpattern
+    assign-landpattern(testpoint-pkg(pkg-params))
   comp
 
-defn testpoint-pkg (params:TestPointPkgParams) :
-  pcb-landpattern lp :
-    pad p : testpoint-pad(shape(params)) at loc(0.0, 0.0)
-  lp
+
