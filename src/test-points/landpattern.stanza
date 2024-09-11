@@ -7,18 +7,9 @@ defpackage debug/test-points/landpattern :
   import jsl/landpatterns/pads
 
 doc: \<DOC>
-TestPointPkgParams: parameters of the test point package
-<DOC>
-public defstruct TestPointPkgParams :
-  shape:Shape
-
-doc: \<DOC>
 Default constructor
 <DOC>
-public defn TestPointPkgParams () :
-  TestPointPkgParams(Circle(1.0))
-
-public defn testpoint-pkg (params:TestPointPkgParams) :
+public defn testpoint-pkg (shape) :
   pcb-landpattern lp :
-    pad p : testpoint-pad(shape(params)) at loc(0.0, 0.0)
+    pad p : testpoint-pad(shape) at loc(0.0, 0.0)
   lp

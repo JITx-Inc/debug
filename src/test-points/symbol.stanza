@@ -10,29 +10,61 @@ defpackage debug/test-points/symbol :
   import jsl/geometry/box
 
 doc: \<DOC>
-TestPointSymbolParams: parameters of the test point schematic symbol
+Struct encapsulating the parameters of schematic symbol
+generation for test points. All symbols will consist of
+a shape and a line to the symbol pin.
+
+The default is a lollipop symbol; the circle has radius 0.25
+and the pin is 0.5 units away.
 <DOC>
 public defstruct TestPointSymbolParams :
-  shape:Shape&Centerable
-  pin-length:Double
+  doc: \<DOC>
+  Shape of the symbol body.
+  Default: a circle with radius of 0.25 units
+  <DOC>
+  shape:Shape&Centerable with:
+    default => Circle(0.25)
+  doc: \<DOC>
+  Distance to the symbol pin.
+  Default: 0.5 units
+  <DOC>
+  pin-length:Double with:
+    default => 0.5
+  doc: \<DOC>
+  Line width.
+  Default: 0.05 units
+  <DOC>
   line-width:Double with:
     default => 0.05
     ensure => ensure-positive!
+  doc: \<DOC>
+  Should the symbol include a reference designator?
+  Default: true
+  <DOC>
+  show-reference-designator?:True|False with:
+    default => true
+  doc: \<DOC>
+  Side to display the reference designator.
+  Either Left, Right, Up, Down, or False. If given false,
+  the reference designator will be displayed in the center of the
+  symbol body.
+  Default: Right
+  <DOC>
   label-side:Dir|False with:
     default => Right
+  doc: \<DOC>
+  Margin between the symbol body and reference designator.
+  If label-side is False, this will have no effect.
+  Default: 1.0 units
+  <DOC>
   label-margin:Double with:
     default => 1.0
 
-doc: \<DOC>
-Default constructor
-<DOC>
-public defn TestPointSymbolParams () :
-  TestPointSymbolParams(
-    Circle(0.25)
-    0.5
-  )
-
 deftype TestPointSym <: SymbolDefn
+
+doc: \<DOC>
+Generate a SchematicSymbol from a set of parameters.
+<DOC>
 public defn testpoint-sym (params:TestPointSymbolParams) -> SchematicSymbol :
   create-symbol(TestPointSym(params))
 
@@ -45,16 +77,17 @@ defn TestPointSym (params:TestPointSymbolParams) -> TestPointSym :
       add-pin(sn, Ref(`p), Point(0.0, 0.0), name = "pin-1")
     defmethod build-artwork (this, sn:SymbolNode) :
       add-glyph(sn, shift-up * shape(params))
-      line(sn, [[0.0, 0.0] [0.0, pin-length(params)]])
+      line(sn, [[0.0, 0.0] [0.0, pin-length(params)]], width = line-width(params))
     defmethod build-params (this, sn:SymbolNode) :
-      val overall = glyph-bounds(sn)
-      val lpos =
-        match(label-side(params)) :
-          (d:Dir) : switch(d) :
-            Left  : [left(overall) - label-margin(params), y(center(overall))]
-            Right : [right(overall) + label-margin(params), y(center(overall))]
-            Up    : [x(center(overall)), down(overall) - label-margin(params)]
-            Down  : [x(center(overall)), up(overall) + label-margin(params)]
-          (otherwise) : ; place in center of shape
-            shift-up * center(shape(params))
-      add-ref-label(sn, lpos)
+      if show-reference-designator?(params) :
+        val overall = glyph-bounds(sn)
+        val lpos =
+          match(label-side(params)) :
+            (d:Dir) : switch(d) :
+              Left  : [left(overall) - label-margin(params), y(center(overall))]
+              Right : [right(overall) + label-margin(params), y(center(overall))]
+              Up    : [x(center(overall)), down(overall) - label-margin(params)]
+              Down  : [x(center(overall)), up(overall) + label-margin(params)]
+            (otherwise) : ; place in center of shape
+              shift-up * center(shape(params))
+        add-ref-label(sn, lpos)

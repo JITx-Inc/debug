@@ -13,8 +13,25 @@ defpackage debug/test-points/test-points :
 val ID-COUNTER = to-seq(0 to false)
 
 doc: \<DOC>
-makes test points
-[TODO] : docs
+Automatically generates test points for a given object.
+Given a net or a port, instantiate a test point for each
+single-pin net or port contained within the JITX object.
+Returns a tuple of Instances representing all new test points.
+
+@param obj: Either a port or a net
+@param tp: An instantiable for the test points
+@param reference-prefix: A prefix for the test point reference designators (default: "TP")
+
+In this example, JITX will instantiate test points for
+both the positive and negative leads of the power net, given
+a custom `MyTestPoint` instantiable. 
+```stanza
+pcb-module my-module :
+  port pwr : power
+  inst my-inst : my-component 
+  net PWR (self.pwr, my-inst.pwr)
+  make-test-points(PWR, MyTestPoint)
+```
 <DOC>
 public defn make-test-points (
     obj:JITXObject,
@@ -24,17 +41,34 @@ public defn make-test-points (
   make-test-point-per-pin(obj, tp, false, reference-prefix)
 
 doc: \<DOC>
-makes test points
-[TODO] : parameterize
-[TODO] : docs
+Automatically generates test points for a given object.
+Given a net or a port, instantiate a test point for each
+single-pin net or port contained within the JITX object.
+Returns a tuple of Instances representing all new test points.
+
+@param obj: Either a port or a net
+@param shape: The shape of the test point 
+@param symbol-params: Parameters describing the test points' schematic symbols 
+@param reference-prefix: Prefix of the test points' reference designators (default: "TP")
+
+In this example, JITX will instantiate test points for
+both the positive and negative leads of the power net. Each 
+test points will have a small circular SMD pad.
+```stanza
+pcb-module my-module :
+  port pwr : power
+  inst my-inst : my-component 
+  net PWR (self.pwr, my-inst.pwr)
+  make-test-points(PWR, Circle(0.5))
+```
 <DOC>
 public defn make-test-points (
     obj:JITXObject,
-    pkg-params:TestPointPkgParams = TestPointPkgParams(),
+    shape:Shape = Circle(1.0)
     symbol-params:TestPointSymbolParams = TestPointSymbolParams(),
     -- reference-prefix:String = "TP")
     -> Tuple<Instance> :
-  make-test-point-per-pin(obj, TestPoint(pkg-params, symbol-params), false, reference-prefix)
+  make-test-point-per-pin(obj, TestPoint(shape, symbol-params), false, reference-prefix)
 
 ; Traverse port/net structure, attach one test point to each
 ; single-pin port or net
@@ -65,7 +99,7 @@ defn instantiate-test-point (pin:JITXObject, component:Instantiable, ref:String|
     tp
 
 ; Parameterizable instantiable
-defn TestPoint (pkg-params:TestPointPkgParams, symbol-params:TestPointSymbolParams) -> Instantiable :
+defn TestPoint (shape:Shape, symbol-params:TestPointSymbolParams) -> Instantiable :
   pcb-component comp :
 
     pin-properties:
@@ -76,5 +110,5 @@ defn TestPoint (pkg-params:TestPointPkgParams, symbol-params:TestPointSymbolPara
     assign-symbol(testpoint-sym(symbol-params))
 
     ; Assign landpattern
-    assign-landpattern(testpoint-pkg(pkg-params))
+    assign-landpattern(testpoint-pkg(shape))
   comp
