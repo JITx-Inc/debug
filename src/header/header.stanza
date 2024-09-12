@@ -6,6 +6,9 @@ defpackage debug/header/header :
   import jitx/commands
   import jsl/bundles
 
+; This is essentially copied from ocdb (and updated to jsl)
+; -- needs to be modernized
+
 ; Create a 10 pin debug connector module that supports JTAG and SWD
 public defn make-10-pin-debug-connector-module (component:Instantiable) : 
   inside pcb-module : 

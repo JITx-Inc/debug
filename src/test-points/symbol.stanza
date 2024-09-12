@@ -51,7 +51,7 @@ public defstruct TestPointSymbolParams :
   Default: Right
   <DOC>
   label-side:Dir|False with:
-    default => Right
+    default => Up 
   doc: \<DOC>
   Margin between the symbol body and reference designator.
   If label-side is False, this will have no effect.
@@ -69,8 +69,9 @@ public defn testpoint-sym (params:TestPointSymbolParams) -> SchematicSymbol :
   create-symbol(TestPointSym(params))
 
 defn TestPointSym (params:TestPointSymbolParams) -> TestPointSym :
-  val y-offset = pin-length(params) + lower-extend(shape(params))
-  val shift-up = Pose(Point(0.0, y-offset), 0.0, false)
+  val y-lower = pin-length(params) + lower-extend(shape(params))
+  val y-upper = pin-length(params) + upper-extend(shape(params))
+  val shift-up = Pose(Point(0.0, y-lower), 0.0, false)
   new TestPointSym :
     defmethod name (this) -> String : "TestPoint"
     defmethod build-pins (this, sn:SymbolNode) :
@@ -81,13 +82,13 @@ defn TestPointSym (params:TestPointSymbolParams) -> TestPointSym :
     defmethod build-params (this, sn:SymbolNode) :
       if show-reference-designator?(params) :
         val overall = glyph-bounds(sn)
-        val lpos =
+        val [lpos, anchor] =
           match(label-side(params)) :
             (d:Dir) : switch(d) :
-              Left  : [left(overall) - label-margin(params), y(center(overall))]
-              Right : [right(overall) + label-margin(params), y(center(overall))]
-              Up    : [x(center(overall)), down(overall) - label-margin(params)]
-              Down  : [x(center(overall)), up(overall) + label-margin(params)]
+              Left  : [[left(overall) - label-margin(params), y(center(overall))], E]
+              Right : [[right(overall) + label-margin(params), y(center(overall))], W]
+              Up    : [[x(center(overall)), y-upper + label-margin(params)], C]
+              Down  : [[x(center(overall)), y-lower - label-margin(params)], C]
             (otherwise) : ; place in center of shape
-              shift-up * center(shape(params))
-        add-ref-label(sn, lpos)
+              [shift-up * center(shape(params)), C]
+        add-ref-label(sn, lpos, anchor = anchor)
