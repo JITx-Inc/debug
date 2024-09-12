@@ -7,10 +7,15 @@ defpackage test/header :
   import jsl/examples/landpatterns/board
 
 val board-shape = RoundedRectangle(50.0, 50.0, 0.25)
-
-; Set the top level module (the module to be compile into a schematic and PCB)
 set-current-design("10-pin-test")
 set-board(default-board(board-shape))
-set-main-module(ten-pin-debug-connector-module(debug/samtec/FTSH-105-01-DV/component))
+;set-main-module(ten-pin-debug-connector-module(debug/samtec/FTSH-105-01-DV/component))
+set-main-module(ten-pin-debug-connector-module(debug/tag-connect/TC2050-IDC/component()))
+
+; 2030 is 6 pins
+;pcb-module main :
+;  inst header : debug/tag-connect/TC2030-IDC/component()
+;set-main-module(main)
+
 view-board()
 view-schematic()
