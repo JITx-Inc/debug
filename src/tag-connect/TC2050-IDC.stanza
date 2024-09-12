@@ -25,7 +25,7 @@ pcb-landpattern TC2050-IDC-footprint :
   layer(Cutout()) = Circle(3.81, 1.015, 0.5)
   layer(Cutout()) = Circle(3.81, (- 1.015), 0.5)
 
-; Leg Latch Holes  
+  ; Leg Latch Holes  
   layer(Cutout()) = Circle((- 3.81), 2.54, 1.1875)
   layer(Cutout()) = Circle((- 3.81), -2.54, 1.1875)
   layer(Cutout()) = Circle(1.905, ( 2.54), 1.1875)
@@ -33,7 +33,6 @@ pcb-landpattern TC2050-IDC-footprint :
   layer(Courtyard(Top)) = Rectangle(10.16, 7.62)
   ref-label()
 
-; [TODO] : support NL option
 public pcb-component component (no-legs?:True|False = false) :
   description = "Insertion point for TC-2050 connector"
   datasheet = "https://www.tag-connect.com/wp-content/uploads/bsk-pdf-manager/TC2050-IDC_Datasheet_7.pdf"
@@ -59,7 +58,8 @@ public pcb-component component (no-legs?:True|False = false) :
     assign-landpattern(TC2050-IDC-footprint)
 
   reference-prefix = "J"
+
+  ; Create and assign box symbol
   val box = BoxSymbol(self)
   val sym = create-symbol(box)
   assign-symbol(sym)
-  ;make-box-symbol()

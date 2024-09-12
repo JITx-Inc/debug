@@ -68,10 +68,10 @@ public pcb-component component (no-legs?:True|False = false) :
     assign-landpattern(TC2030-IDC-NL-footprint)
   else :
     assign-landpattern(TC2030-IDC-footprint)
+
   reference-prefix = "J"
 
-  property(self.rated-temperature) = false
-
+  ; TODO : maybe move these to a module?
   val swd-bundle = swd(SWD-SWO)
   supports swd-bundle :
     swd-bundle.swdio  => self.p[2]
