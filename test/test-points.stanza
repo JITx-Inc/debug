@@ -4,7 +4,7 @@ defpackage test :
   import jitx
   import jitx/commands
   import debug/test-points
-  import debug/header/header
+  import debug/header
 
   import jsl/bundles
   import jsl/design/settings

@@ -1,0 +1,36 @@
+#use-added-syntax(jitx)
+defpackage debug/tag-connect/TC2030-IDC :
+  import core
+
+  import jitx
+  import jitx/commands
+
+  import jsl/bundles
+
+public pcb-component component :
+  description = "Insertion point for TC-2030 connector"
+  datasheet = "https://www.tag-connect.com/wp-content/uploads/bsk-pdf-manager/2019/12/TC2030-IDC-Datasheet-Rev-B.pdf"
+  manufacturer = "Tag-Connect"
+  mpn = "TC2030-IDC"
+  property(self.trust) = "built"
+  port p: pin[1 through 6]
+
+  ;val sym = header-symbol(6, 2)
+  ;symbol = sym(for i in 1 through 6 do : p[i] => sym.p[i])
+  ;landpattern = TC2030-IDC-footprint(for i in 1 through 6 do : p[i] => TC2030-IDC-footprint.p[i])
+  ;reference-prefix = "J"
+
+  property(self.rated-temperature) = false
+
+  val swd-bundle = swd(SWD-SWO)
+  supports swd-bundle :
+    swd-bundle.swdio  => self.p[2]
+    swd-bundle.swdclk => self.p[4]
+    swd-bundle.swo => self.p[6]
+
+  supports power:
+    power.vdd => self.p[1]
+    power.gnd => self.p[5]
+
+  supports reset:
+    reset.reset => self.p[3]

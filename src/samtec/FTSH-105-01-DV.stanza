@@ -1,0 +1,48 @@
+#use-added-syntax(jitx)
+defpackage debug/samtec/FTSH-105-01-DV :
+  import core
+
+  import jitx
+  import jitx/commands
+
+  import jsl/symbols
+  import jsl/landpatterns
+
+; Datasheet: https://www.mouser.com/datasheet/2/527/ftsh_smt-2932128.pdf
+
+public pcb-component component :
+  manufacturer = "Samtec"
+  mpn = "FTSH-105-01-L-DV-K"
+  description = "Connector Header Surface Mount 10 position 0.050 (1.27mm)"
+
+  pin-properties :
+    [pin:Ref | pads:Int ... | side:Dir ]
+    for i in 1 through 10 by 2 do :
+      [p[i] | i | Left]
+      [p[i + 1] | (i + 1) | Right]
+
+  ; Build box symbol
+  val box = BoxSymbol(self)
+  val sym = create-symbol(box)
+  assign-symbol(sym)
+
+  val pkg = Header(
+    num-leads = 10
+    ; [TODO] : unsure about these values, datasheet is confusing. No tolerances either.
+    lead-type = SMT-Lead(
+      SmallRectangularLeads()
+      Exactly(2.79) ; length
+      Exactly(0.74) ; width
+    )
+    pad-diam = 0.74
+    rows = 2
+    pitch = 1.27
+    ; [TODO] : also unsure about these values, datasheet is confusing
+    package-body = PackageBody(
+      width =  Exactly(4.78)
+      length = Exactly(6.35)
+      height = Exactly(5.97)
+    )
+  ) 
+  val lp = create-landpattern(pkg)
+  assign-landpattern(lp)
