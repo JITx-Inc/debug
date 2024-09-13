@@ -30,6 +30,7 @@ public defstruct TestPointSymbolParams :
   <DOC>
   pin-length:Double with:
     default => 0.5
+    ensure => ensure-positive!
   doc: \<DOC>
   Line width.
   Default: 0.05 units
@@ -51,7 +52,7 @@ public defstruct TestPointSymbolParams :
   Default: Right
   <DOC>
   label-side:Dir|False with:
-    default => Up 
+    default => Up
   doc: \<DOC>
   Margin between the symbol body and reference designator.
   If label-side is False, this will have no effect.
@@ -59,6 +60,23 @@ public defstruct TestPointSymbolParams :
   <DOC>
   label-margin:Double with:
     default => 1.0
+with:
+  printer => true
+  keyword-constructor => true
+
+
+var DEFAULT-SYMBOL-PARAMS = TestPointSymbolParams()
+
+doc: \<DOC>
+Return the current set of default paramters for test point symbol generation.
+<DOC>
+public defn default-test-point-symbol-params () : DEFAULT-SYMBOL-PARAMS
+
+doc: \<DOC>
+Set the default paramters for test point symbol generation.
+<DOC>
+public defn set-default-test-point-symbol-params (ps:TestPointSymbolParams) -> False :
+  DEFAULT-SYMBOL-PARAMS = ps
 
 deftype TestPointSym <: SymbolDefn
 

@@ -1,6 +1,7 @@
 #use-added-syntax(jitx)
 defpackage debug/test-points/test-points :
   import core
+  import collections
 
   import jitx
   import jitx/commands
@@ -26,7 +27,8 @@ which generates reference designators from the JITX target object.
 public deftype ReferenceStrategy
 public defmulti reference (r:ReferenceStrategy, target:JITXObject) -> String
 
-val ID-COUNTER = to-seq(0 to false)
+val ID-COUNTERS =
+  HashTable-init<String,Seq>({to-seq(0 to false)})
 
 doc: \<DOC>
 The Prefix reference designator generation strategy,
@@ -36,8 +38,18 @@ Generates references of the form "P0, P1, ...", where
 <DOC>
 public defstruct Prefix <: ReferenceStrategy :
   prefix: String
+with:
+  constructor => #Prefix
 defmethod reference (r:Prefix, target:JITXObject) :
-  to-string("%_%_" % [prefix(r), next(ID-COUNTER)])
+  to-string("%_%_" % [prefix(r), next(ID-COUNTERS[prefix(r)])])
+
+doc: \<DOC>
+Safe constructor for `Prefix` values, ensuring that the
+argument is non-empty.
+<DOC>
+public defn Prefix (prefix:String) -> Prefix :
+  if empty?(prefix) : throw(ValueError("Prefix strings must be non-empty"))
+  #Prefix(prefix)
 
 doc: \<DOC>
 The ObjectName reference designator generation strategy.
@@ -73,10 +85,11 @@ pcb-module my-module :
 <DOC>
 public defn make-test-points (
     obj:JITXObject,
-    tp:Instantiable
+    tp:Instantiable,
+    instance-name:Symbol = `testpoint-component,
     reference-strategy:ReferenceStrategy = ObjectName())
     -> Tuple<Instance> :
-  make-test-point-per-pin(obj, tp, false, reference-strategy)
+  make-test-point-per-pin(obj, tp, instance-name, reference-strategy)
 
 doc: \<DOC>
 Automatically generates test points for a given object.
@@ -103,32 +116,33 @@ pcb-module my-module :
 public defn make-test-points (
     obj:JITXObject,
     shape:Shape = Circle(1.0)
-    symbol-params:TestPointSymbolParams = TestPointSymbolParams(),
+    symbol-params:TestPointSymbolParams = default-test-point-symbol-params(),
+    instance-name:Symbol = `testpoint-component,
     reference-strategy:ReferenceStrategy = ObjectName())
     -> Tuple<Instance> :
-  make-test-point-per-pin(obj, TestPoint(shape, symbol-params), false, reference-strategy)
+  make-test-point-per-pin(obj, TestPoint(shape, symbol-params), instance-name, reference-strategy)
 
 ; Traverse port/net structure, attach one test point to each
 ; single-pin port or net
 defn make-test-point-per-pin (
     target:JITXObject,
     point:Instantiable,
-    name:String|False,
+    inst-name:Symbol,
     reference-strategy:ReferenceStrategy)
     -> Tuple<Instance> :
   match(target) :
     (obj:Pin) :
-      to-tuple $ for p in pins(obj) seq : instantiate-test-point(p, point, name, reference-strategy)
+      to-tuple $ for p in pins(obj) seq : instantiate-test-point(p, point, inst-name, reference-strategy)
     (obj:Net) :
       match(port-type(obj)) :
-        (t:SinglePin) : [instantiate-test-point(obj, point, name, reference-strategy)]
+        (t:SinglePin) : [instantiate-test-point(obj, point, inst-name, reference-strategy)]
         (otherwise) :
-          to-tuple $ for n in single-pin-nets(obj) seq : instantiate-test-point(n, point, name, reference-strategy)
+          to-tuple $ for n in single-pin-nets(obj) seq : instantiate-test-point(n, point, inst-name, reference-strategy)
     (obj) : throw(ArgumentError("Can only call make-test-points with a pin or net; given %_" % [obj]))
 
-defn instantiate-test-point (pin:JITXObject, component:Instantiable, name:String|False, reference-strategy) -> Instance :
+defn instantiate-test-point (pin:JITXObject, component:Instantiable, inst-name:Symbol, reference-strategy) -> Instance :
   inside pcb-module :
-    inst testpoint-comp : component
+    val testpoint-comp = make-inst(inst-name, component, false)
     net (testpoint-comp.p, pin)
     reference-designator(testpoint-comp) = reference(reference-strategy, pin)
     instance-status(testpoint-comp) :
