@@ -43,6 +43,6 @@ public pcb-component component :
       length = Exactly(6.35)
       height = Exactly(5.97)
     )
-  ) 
+  )
   val lp = create-landpattern(pkg)
   assign-landpattern(lp)

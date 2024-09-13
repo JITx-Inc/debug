@@ -15,20 +15,18 @@ Approaches for producing test-point reference designators.
 We provide two strategies:
 * Prefix, parameterized by a string produces reference designators
   of the form "P0, P1, ...", where "P" is any prefix.
-* NetName names test-points after the target net. If the net is
-  not named, or the target is a concrete pin, we default to
-  prefixed references "TP0, TP1, ...".
+* ObjectName names test-points after the target pin or net. If the object is
+  not named, we default to prefixed references "TP0, TP1, ...".
 
 This approach is extensible: any subtype of `ReferenceStrategy`
 must simply implement the multi
-`refence (r:ReferenceStrategy, target:JITXObject) -> String`,
+`reference (r:ReferenceStrategy, target:JITXObject) -> String`,
 which generates reference designators from the JITX target object.
 <DOC>
 public deftype ReferenceStrategy
 public defmulti reference (r:ReferenceStrategy, target:JITXObject) -> String
 
 val ID-COUNTER = to-seq(0 to false)
-
 
 doc: \<DOC>
 The Prefix reference designator generation strategy,
@@ -42,17 +40,15 @@ defmethod reference (r:Prefix, target:JITXObject) :
   to-string("%_%_" % [prefix(r), next(ID-COUNTER)])
 
 doc: \<DOC>
-The NetName reference designator generation strategy.
+The ObjectName reference designator generation strategy.
 Generates references from net names when available.
 Defaults to `Prefix("TP")` when unavailable.
 <DOC>
-public defstruct NetName <: ReferenceStrategy
-defmethod reference (r:NetName, target:JITXObject) :
-  match(target:Net) :
-    match(ref?(target)) :
-      (r:Ref) : to-string(r)
-      (otherwise) : reference(Prefix("TP"), target)
-  else : reference(Prefix("TP"), target)
+public defstruct ObjectName <: ReferenceStrategy
+defmethod reference (r:ObjectName, target:JITXObject) :
+  match(ref?(target)) :
+    (r:Ref) : to-string(r)
+    (otherwise) : reference(Prefix("TP"), target)
 
 doc: \<DOC>
 Automatically generates test points for a given object.
@@ -62,7 +58,7 @@ Returns a tuple of Instances representing all new test points.
 
 @param obj: Either a port or a net
 @param tp: An instantiable for the test points
-@param reference-strategy: Strategy for generating reference designators. Default: `NetName()` 
+@param reference-strategy: Strategy for generating reference designators. Default: `ObjectName()`
 
 In this example, JITX will instantiate test points for
 both the positive and negative leads of the power net, given
@@ -78,7 +74,7 @@ pcb-module my-module :
 public defn make-test-points (
     obj:JITXObject,
     tp:Instantiable
-    reference-strategy:ReferenceStrategy = NetName())
+    reference-strategy:ReferenceStrategy = ObjectName())
     -> Tuple<Instance> :
   make-test-point-per-pin(obj, tp, false, reference-strategy)
 
@@ -91,7 +87,7 @@ Returns a tuple of Instances representing all new test points.
 @param obj: Either a port or a net
 @param shape: The shape of the test point
 @param symbol-params: Parameters describing the test points' schematic symbols
-@param reference-strategy: Strategy for generating reference designators. Default: `NetName()` 
+@param reference-strategy: Strategy for generating reference designators. Default: `ObjectName()`
 
 In this example, JITX will instantiate test points for
 both the positive and negative leads of the power net. Each
@@ -108,7 +104,7 @@ public defn make-test-points (
     obj:JITXObject,
     shape:Shape = Circle(1.0)
     symbol-params:TestPointSymbolParams = TestPointSymbolParams(),
-    reference-strategy:ReferenceStrategy = NetName())
+    reference-strategy:ReferenceStrategy = ObjectName())
     -> Tuple<Instance> :
   make-test-point-per-pin(obj, TestPoint(shape, symbol-params), false, reference-strategy)
 
@@ -132,10 +128,12 @@ defn make-test-point-per-pin (
 
 defn instantiate-test-point (pin:JITXObject, component:Instantiable, name:String|False, reference-strategy) -> Instance :
   inside pcb-module :
-    inst tp : component
-    net (tp.p, pin)
-    reference-designator(tp) = reference(reference-strategy, pin)
-    tp
+    inst testpoint-comp : component
+    net (testpoint-comp.p, pin)
+    reference-designator(testpoint-comp) = reference(reference-strategy, pin)
+    instance-status(testpoint-comp) :
+      bom-status = NotInBOM
+    testpoint-comp
 
 ; Parameterizable instantiable
 defn TestPoint (shape:Shape, symbol-params:TestPointSymbolParams) -> Instantiable :
