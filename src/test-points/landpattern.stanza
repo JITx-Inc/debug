@@ -25,7 +25,7 @@ public defn testpoint-pkg (shape -- line-width:Double = default-silk-width(), ma
         ; TODO - I'm not sure how to make this general. The
         ;  best I can think to do is to use expand + a Difference to
         ;  subtract out the internal shape.
-        println("Unhandled Outline Shape")
+        println("Unable to generate test point silkscreen for outline shape '%_'" % [shape])
 
     ; This is an initial location - The
     ;   placer is used to adjust when in situ.
