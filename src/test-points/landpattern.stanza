@@ -2,18 +2,23 @@
 defpackage debug/test-points/landpattern :
   import core
   import jitx
+  import jitx/commands
 
   import jsl/landpatterns
+
 
 doc: \<DOC>
 Default constructor
 <DOC>
-public defn testpoint-pkg (shape -- line-width:Double = default-silk-width(), mask-clearance:Double = default-mask-clearance()) :
+public defn testpoint-pkg (shape -- line-width:Double = default-silk-width(), mask-clearance:Double = default-mask-clearance(), font-size = 1.25) :
+
   pcb-landpattern lp :
     pad p : testpoint-pad(shape) at loc(0.0, 0.0)
+
     match(shape):
       (c:Circle):
         val r = radius(c)
+
         val s-r = r + mask-clearance + line-width
         layer(Silkscreen(Top)) = Polyline(line-width, [Arc(Point(0.0, 0.0), s-r, 0.0, 360.0)])
       (x):
@@ -21,4 +26,9 @@ public defn testpoint-pkg (shape -- line-width:Double = default-silk-width(), ma
         ;  best I can think to do is to use expand + a Difference to
         ;  subtract out the internal shape.
         println("Unhandled Outline Shape")
+
+    ; This is an initial location - The
+    ;   placer is used to adjust when in situ.
+    val s-dims = dims(shape)
+    layer(Silkscreen(Top)) = Text(">REF", font-size, W, loc(1.25 * x(s-dims), 0.0))
   lp
