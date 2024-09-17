@@ -84,7 +84,7 @@ pcb-module my-module :
 ```
 <DOC>
 public defn make-test-points (
-    obj:JITXObject,
+    obj:JITXObject|Tuple<JITXObject>,
     tp:Instantiable,
     instance-name:Symbol = `testpoint-component,
     reference-strategy:ReferenceStrategy = ObjectName())
@@ -114,8 +114,8 @@ pcb-module my-module :
 ```
 <DOC>
 public defn make-test-points (
-    obj:JITXObject,
-    shape:Shape = Circle(1.0)
+    obj:JITXObject|Tuple<JITXObject>,
+    shape:Shape = Circle(0.5)
     symbol-params:TestPointSymbolParams = default-test-point-symbol-params(),
     instance-name:Symbol = `testpoint-component,
     reference-strategy:ReferenceStrategy = ObjectName())
@@ -125,7 +125,7 @@ public defn make-test-points (
 ; Traverse port/net structure, attach one test point to each
 ; single-pin port or net
 defn make-test-point-per-pin (
-    target:JITXObject,
+    target:JITXObject|Tuple<JITXObject>,
     point:Instantiable,
     inst-name:Symbol,
     reference-strategy:ReferenceStrategy)
@@ -138,6 +138,9 @@ defn make-test-point-per-pin (
         (t:SinglePin) : [instantiate-test-point(obj, point, inst-name, reference-strategy)]
         (otherwise) :
           to-tuple $ for n in single-pin-nets(obj) seq : instantiate-test-point(n, point, inst-name, reference-strategy)
+    (obj:Tuple<JITXObject>):
+      to-tuple $ for obj-inst in obj seq-cat:
+        make-test-point-per-pin(obj-inst, point, inst-name, reference-strategy)
     (obj) : throw(ArgumentError("Can only call make-test-points with a pin or net; given %_" % [obj]))
 
 defn instantiate-test-point (pin:JITXObject, component:Instantiable, inst-name:Symbol, reference-strategy) -> Instance :
