@@ -2,14 +2,23 @@
 defpackage debug/test-points/landpattern :
   import core
   import jitx
-  import jitx/shapes
 
-  import jsl/landpatterns/pads
+  import jsl/landpatterns
 
 doc: \<DOC>
 Default constructor
 <DOC>
-public defn testpoint-pkg (shape) :
+public defn testpoint-pkg (shape -- line-width:Double = default-silk-width(), mask-clearance:Double = default-mask-clearance()) :
   pcb-landpattern lp :
     pad p : testpoint-pad(shape) at loc(0.0, 0.0)
+    match(shape):
+      (c:Circle):
+        val r = radius(c)
+        val s-r = r + mask-clearance + line-width
+        layer(Silkscreen(Top)) = Polyline(line-width, [Arc(Point(0.0, 0.0), s-r, 0.0, 360.0)])
+      (x):
+        ; TODO - I'm not sure how to make this general. The
+        ;  best I can think to do is to use expand + a Difference to
+        ;  subtract out the internal shape.
+        println("Unhandled Outline Shape")
   lp
