@@ -1,0 +1,69 @@
+#use-added-syntax(jitx)
+defpackage debug/circuits/ResetSwitch:
+  import core
+  import jitx
+  import jitx/commands
+  import jitx/parts
+
+  import jsl
+
+
+
+doc: \<DOC>
+Active-Low Reset Circuit
+
+This creates an active low reset circuit with a manual
+switch controlled reset. This circuit would be typical for
+a prototype and is customizable.
+
+@member rail Voltage rail for generating the reset signal
+@member reset_n Active low reset signal generated from tactle switch
+
+@param resistance Pullup resistance value for the reset signal. Default is 10k.
+@param delay RC delay constant in seconds. Default is 1ns
+@param C-series Capacitor selection series. The capacitor will be selected
+by taking the closest capacitance value from this series that is greater than
+the computed RC delay capacitance. Default is {@link E12}
+@param R-query Resistor Query Object - Default is `ResistorQuery()`.
+@param C-query Capacitor Query Object - Default is `CapacitorQuery()`.
+@param diode-type Instantiable for reverse-biased diode between `rail.V+` and the `reset_n`
+signal. By default, this is {@link diodes/SSA33L/component}
+@param sw-type Instantiable for the switch that can manually activate the reset.
+By default, this is {@link switches/tactile-sw/device}
+<DOC>
+
+public defn reset-circuit (
+  --
+  resistance:Double = 10.0e3
+  delay:Double = 1.0e-9
+  C-series:E-Series = E12(),
+  R-query:ResistorQuery = ResistorQuery(),
+  C-query:CapacitorQuery = CapacitorQuery(),
+  diode-type:Instantiable = diodes/SSA33L/component
+  sw-type:Instantiable = switches/tactile-sw/device
+  ) -> Instantiable:
+
+  pcb-module reset-circuit-t :
+    port rail : power
+    port reset-n
+
+    public inst reset-sw : sw-type
+    public inst R : create-resistor(R-query, resistance = resistance)
+    public inst diode : diode-type
+
+    val cap-raw = delay / resistance
+    val cap = find-ceil(C-series, cap-raw)
+
+    public inst delay-cap : create-capacitor(
+      C-query,
+      capacitance = cap
+      )
+
+    val [cp, cn] = get-element-ports(delay-cap)
+
+    net (diode.c, R.p[1], rail.V+)
+    net (diode.a, R.p[2], reset-n)
+    net (reset-sw.p[1], cp, reset-n)
+    net (reset-sw.p[2], cn, rail.V-)
+
+  reset-circuit-t
