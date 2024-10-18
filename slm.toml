@@ -1,5 +1,5 @@
 name = "debug"
-version = "0.3.0"
+version = "0.3.1"
 [dependencies]
 jsl = { git = "JITx-Inc/jsl", version = "0.8.0" }
 switches = { git = "JITx-Inc/switches", version = "0.1.0"}
