@@ -24,8 +24,8 @@ a prototype and is customizable.
 @param C-series Capacitor selection series. The capacitor will be selected
 by taking the closest capacitance value from this series that is greater than
 the computed RC delay capacitance. Default is {@link E12}
-@param R-query Resistor Query Object - Default is `ResistorQuery()`.
-@param C-query Capacitor Query Object - Default is `CapacitorQuery()`.
+@param R-query Resistor Query Object - Default is `get-default-resistor-query()`.
+@param C-query Capacitor Query Object - Default is `get-default-capacitor-query()`.
 @param diode-type Instantiable for reverse-biased diode between `rail.V+` and the `reset_n`
 signal. By default, this is {@link diodes/SSA33L/component}
 @param sw-type Instantiable for the switch that can manually activate the reset.
@@ -37,8 +37,8 @@ public defn reset-circuit (
   resistance:Double = 10.0e3
   delay:Double = 1.0e-9
   C-series:E-Series = E12(),
-  R-query:ResistorQuery = ResistorQuery(),
-  C-query:CapacitorQuery = CapacitorQuery(),
+  R-query:ResistorQuery = get-default-resistor-query(),
+  C-query:CapacitorQuery = get-default-capacitor-query(),
   diode-type:Instantiable = diodes/SSA33L/component
   sw-type:Instantiable = switches/tactile-sw/device
   ) -> Instantiable:
